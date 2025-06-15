@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关键词MVP首页+工作台</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; margin: 0; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 16px; }
+    .title { font-size: 2.5rem; font-weight: bold; text-align: center; margin-bottom: 16px; }
+    .subtitle { font-size: 1.2rem; color: #6366f1; text-align: center; margin-bottom: 32px; }
+    .flow { display: flex; justify-content: center; align-items: center; gap: 32px; margin-bottom: 32px; }
+    .flow-step { background: #6366f1; color: #fff; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
+    .arrow { font-size: 2rem; color: #6366f1; }
+    .table-wrap { display: flex; justify-content: center; }
+    table { border-collapse: collapse; min-width: 480px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px 16px; text-align: center; }
+    th { background: #f3f4f6; font-weight: bold; }
+    .cta-btn { display: block; margin: 40px auto 0; background: #6366f1; color: #fff; font-size: 1.2rem; padding: 16px 40px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .workspace { display: flex; gap: 32px; margin-top: 64px; }
+    .sidebar { width: 300px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+    .main { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+    .site-list { margin-top: 16px; }
+    .site-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; cursor:pointer; }
+    .site-item.selected { background: #eef2ff; }
+    .add-site { display: flex; gap: 8px; margin-top: 12px; }
+    .add-site input { flex: 1; padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 4px; }
+    .add-site button { background: #6366f1; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; cursor: pointer; }
+    .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .add-keyword-btn { background: #6366f1; color: #fff; border: none; border-radius: 4px; padding: 8px 20px; cursor: pointer; }
+    .keyword-table th, .keyword-table td { font-size: 0.95rem; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.85em; }
+    .tag.green { background: #dcfce7; color: #22c55e; }
+    .tag.red { background: #fee2e2; color: #ef4444; }
+    .tag.gray { background: #f3f4f6; color: #6b7280; }
+    .actions button { margin: 0 2px; border: none; background: none; font-size: 1.1em; cursor: pointer; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0005; align-items: center; justify-content: center; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-content { background: #fff; border-radius: 10px; padding: 32px 24px; min-width: 320px; }
+    .modal-content label { display: block; margin-top: 12px; margin-bottom: 4px; }
+    .modal-content input, .modal-content select { width: 100%; padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 4px; }
+    .modal-content .modal-actions { margin-top: 20px; text-align: right; }
+    .modal-content button { margin-left: 8px; }
+    .empty-tip { color: #888; text-align: center; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 工作台内容 -->
+    <div class="workspace" id="workspace" style="margin-top:0;">
+      <!-- 左侧栏 -->
+      <div class="sidebar">
+        <div style="font-weight:bold; font-size:1.1rem;">① 添加你找到的赚钱网站</div>
+        <div class="add-site">
+          <input id="site-input" type="text" placeholder="输入网站域名..." />
+          <button onclick="addSite()">添加</button>
+        </div>
+        <div class="site-list" id="site-list"></div>
+      </div>
+      <!-- 右侧主区 -->
+      <div class="main">
+        <div class="main-header">
+          <div id="main-title" style="font-weight:bold; font-size:1.1rem;">② 选择工具站以添加关键词</div>
+          <button class="add-keyword-btn" id="add-keyword-btn" onclick="showModal()" disabled>添加关键词</button>
+        </div>
+        <div id="keyword-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- 首页内容 -->
+    <div class="title" style="margin-top: 64px;">海外工具站找词的核心步骤</div>
+    <div class="subtitle">用结构化流程高效筛选关键词</div>
+    <div class="flow">
+      <div class="flow-step">1</div>
+      <span class="arrow">→</span>
+      <div class="flow-step">2</div>
+      <span class="arrow">→</span>
+      <div class="flow-step">3</div>
+    </div>
+    <div style="text-align:center; margin-bottom:24px; color:#6b7280;">1. 找金牛工具站  2. 查关键词  3. 判断机会</div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>指标</th><th>标准</th><th>说明</th></tr>
+        <tr><td>优化难度 (KD)</td><td>&lt; 30</td><td>易排名</td></tr>
+        <tr><td>月搜索量</td><td>&gt; 1000</td><td>有需求</td></tr>
+        <tr><td>Google结果类型</td><td>以内页为主</td><td>机会大</td></tr>
+        <tr><td>需求类型</td><td>长期稳定</td><td>长期价值</td></tr>
+        <tr><td>自然搜索词-非品牌词</td><td>是</td><td>排除品牌词</td></tr>
+      </table>
+    </div>
+
+    <!-- 关键词弹窗原型 -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div style="font-size:1.1rem;font-weight:bold;margin-bottom:8px;">添加关键词</div>
+        <label>关键词</label><input type="text" id="kw-keyword" />
+        <label>月搜索量</label><input type="number" id="kw-searchVolume" />
+        <label>优化难度(KD)</label><input type="number" id="kw-kd" />
+        <label>外链需求</label><input type="number" id="kw-backlink" />
+        <label>Google结果类型</label>
+        <select id="kw-googleType"><option value="inner_page">以内页为主</option><option value="homepage">以首页为主</option></select>
+        <label>需求类型</label>
+        <select id="kw-demandType"><option value="stable">长期稳定</option><option value="seasonal">季节性</option></select>
+        <label>自然搜索词-非品牌词</label>
+        <select id="kw-nature"><option value="yes">是</option><option value="no">否</option></select>
+        <div class="modal-actions">
+          <button onclick="hideModal()">取消</button>
+          <button onclick="addKeyword()">添加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 数据结构
+    function getSites() {
+      return JSON.parse(localStorage.getItem('kw-sites') || '[]');
+    }
+    function setSites(sites) {
+      localStorage.setItem('kw-sites', JSON.stringify(sites));
+    }
+    function getKeywords() {
+      return JSON.parse(localStorage.getItem('kw-keywords') || '[]');
+    }
+    function setKeywords(keywords) {
+      localStorage.setItem('kw-keywords', JSON.stringify(keywords));
+    }
+    // 状态
+    let selectedSiteId = null;
+    // 工具站渲染
+    function renderSites() {
+      const sites = getSites();
+      const list = document.getElementById('site-list');
+      list.innerHTML = '';
+      sites.forEach(site => {
+        const div = document.createElement('div');
+        div.className = 'site-item' + (site.id === selectedSiteId ? ' selected' : '');
+        div.innerHTML = `<span>${site.domain}</span><span style="color:#ef4444;cursor:pointer;" title="删除">×</span>`;
+        div.onclick = () => { selectedSiteId = site.id; renderSites(); renderKeywords(); };
+        div.querySelector('span[title]')?.addEventListener('click', e => { e.stopPropagation(); deleteSite(site.id); });
+        list.appendChild(div);
+      });
+      // 选中后右侧可用
+      document.getElementById('add-keyword-btn').disabled = !selectedSiteId;
+      document.getElementById('main-title').textContent = selectedSiteId ? `② 为 ${sites.find(s=>s.id===selectedSiteId).domain} 添加关键词` : '② 选择工具站以添加关键词';
+    }
+    function addSite() {
+      const input = document.getElementById('site-input');
+      const val = input.value.trim();
+      if (!val) return;
+      const sites = getSites();
+      const newSite = { id: Date.now().toString(), domain: val, createdAt: new Date().toISOString() };
+      sites.push(newSite);
+      setSites(sites);
+      input.value = '';
+      selectedSiteId = newSite.id;
+      renderSites();
+      renderKeywords();
+    }
+    function deleteSite(id) {
+      let sites = getSites();
+      sites = sites.filter(s => s.id !== id);
+      setSites(sites);
+      // 删除关联关键词
+      let kws = getKeywords();
+      kws = kws.filter(k => k.toolSiteId !== id);
+      setKeywords(kws);
+      if (selectedSiteId === id) selectedSiteId = sites[0]?.id || null;
+      renderSites();
+      renderKeywords();
+    }
+    // 关键词渲染
+    function renderKeywords() {
+      const wrap = document.getElementById('keyword-table-wrap');
+      if (!selectedSiteId) {
+        wrap.innerHTML = '<div class="empty-tip">请先选择一个工具站</div>';
+        return;
+      }
+      const kws = getKeywords().filter(k => k.toolSiteId === selectedSiteId);
+      if (kws.length === 0) {
+        wrap.innerHTML = '<div class="empty-tip">暂无关键词，请点击右上角添加</div>';
+        return;
+      }
+      let html = `<table class="keyword-table" style="width:100%;"><tr><th>关键词</th><th>月搜索量</th><th>KD</th><th>外链需求</th><th>Google结果</th><th>需求类型</th><th>自然搜索词-非品牌词</th><th>状态</th><th>操作</th></tr>`;
+      for (const kw of kws) {
+        html += `<tr>
+          <td>${kw.keyword}</td>
+          <td class="${kw.searchVolume<1000?'tag gray':''}">${kw.searchVolume}</td>
+          <td class="${kw.keywordDifficulty<30?'tag green':kw.keywordDifficulty>50?'tag red':''}">${kw.keywordDifficulty}</td>
+          <td>${kw.backlinkNeeded}</td>
+          <td>${kw.googleResultType==='inner_page'?'<span class="tag green">机会</span>':'<span class="tag gray">以首页为主</span>'}</td>
+          <td>${kw.demandType==='stable'?'长期稳定':'季节性'}</td>
+          <td>${kw.nature==='yes'?'<span class="tag green">是</span>':'<span class="tag red">否</span>'}</td>
+          <td>${kw.status==='opportunity'?'<span class="tag green">机会</span>':kw.status==='rejected'?'<span class="tag red">放弃</span>':'<span class="tag gray">待定</span>'}</td>
+          <td class="actions">
+            ${kw.status!=='opportunity'?`<button title="标记为机会" onclick="setKwStatus('${kw.id}','opportunity')">✔️</button>`:''}
+            ${kw.status!=='rejected'?`<button title="放弃" onclick="setKwStatus('${kw.id}','rejected')">❌</button>`:''}
+            <button title="删除" onclick="deleteKeyword('${kw.id}')">🗑️</button>
+          </td>
+        </tr>`;
+      }
+      html += '</table>';
+      wrap.innerHTML = html;
+    }
+    function setKwStatus(id, status) {
+      const kws = getKeywords();
+      const idx = kws.findIndex(k => k.id === id);
+      if (idx > -1) { kws[idx].status = status; setKeywords(kws); renderKeywords(); }
+    }
+    function deleteKeyword(id) {
+      let kws = getKeywords();
+      kws = kws.filter(k => k.id !== id);
+      setKeywords(kws);
+      renderKeywords();
+    }
+    // 弹窗表单
+    function showModal() {
+      document.getElementById('modal').classList.add('active');
+    }
+    function hideModal() {
+      document.getElementById('modal').classList.remove('active');
+      // 清空表单
+      document.getElementById('kw-keyword').value = '';
+      document.getElementById('kw-searchVolume').value = '';
+      document.getElementById('kw-kd').value = '';
+      document.getElementById('kw-backlink').value = '';
+      document.getElementById('kw-googleType').value = 'inner_page';
+      document.getElementById('kw-demandType').value = 'stable';
+      document.getElementById('kw-nature').value = 'yes';
+    }
+    function addKeyword() {
+      const keyword = document.getElementById('kw-keyword').value.trim();
+      const searchVolume = parseInt(document.getElementById('kw-searchVolume').value) || 0;
+      const keywordDifficulty = parseInt(document.getElementById('kw-kd').value) || 0;
+      const backlinkNeeded = parseInt(document.getElementById('kw-backlink').value) || 0;
+      const googleResultType = document.getElementById('kw-googleType').value;
+      const demandType = document.getElementById('kw-demandType').value;
+      const nature = document.getElementById('kw-nature').value;
+      if (!keyword) return;
+      const kws = getKeywords();
+      kws.push({
+        id: Date.now().toString(),
+        toolSiteId: selectedSiteId,
+        keyword,
+        searchVolume,
+        keywordDifficulty,
+        backlinkNeeded,
+        googleResultType,
+        demandType,
+        nature,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+      setKeywords(kws);
+      hideModal();
+      renderKeywords();
+    }
+    // 初始化
+    renderSites();
+    renderKeywords();
+  </script>
+</body>
+</html> 
